@@ -1,6 +1,10 @@
 # Antigen <sup>v1</sup>
 
-[![Build Status](https://secure.travis-ci.org/zsh-users/antigen.png)](http://travis-ci.org/zsh-users/antigen)
+### A plugin manager for zsh, inspired by oh-my-zsh and vundle.
+
+[![Latest](https://img.shields.io/github/release/zsh-users/antigen.svg?label=latest)](https://github.com/zsh-users/antigen/releases/latest) [![Build Status](https://img.shields.io/travis/zsh-users/antigen/master.svg?label=stable)](http://travis-ci.org/zsh-users/antigen) [![Build Status](https://img.shields.io/travis/zsh-users/antigen/develop.svg?label=next)](http://travis-ci.org/zsh-users/antigen)
+
+[Installation](#installation) | [Configuration](#configuration) | [Bug tracker](https://github.com/zsh-users/antigen/issues) | [Discussions](https://trello.com/b/P0xrGgfT/antigen) | [Chat](https://gitter.im/antigen-zsh/develop) | [License](http://mit.sharats.me/)
 
 Antigen is a small set of functions that help you easily manage your shell (zsh)
 plugins, called bundles. The concept is pretty much the same as bundles in a
@@ -8,8 +12,12 @@ typical vim+pathogen setup. Antigen is to zsh, what [Vundle][] is to vim.
 
 > [Donate to Antigen](https://gum.co/antigen)
 
+[![https://asciinema.org/a/cn20v8fy6wrhab4l5kifv6dce](https://asciinema.org/a/cn20v8fy6wrhab4l5kifv6dce.png)](https://asciinema.org/a/cn20v8fy6wrhab4l5kifv6dce)
+
 Antigen has reached a certain level of stability and has been used in the wild
 for around a couple of years. If you face any problems, please open an issue.
+
+Antigen works with zsh versions >=4.3 and 5.x.
 
 Note: Please read the commit comments of the changesets when you pull a new
 version of antigen.
@@ -25,7 +33,7 @@ sample, if you will.
 
 Get and load antigen.
 
-    curl -L https://raw.githubusercontent.com/zsh-users/antigen/master/antigen.zsh > antigen.zsh
+    curl https://cdn.rawgit.com/zsh-users/antigen/v1.1.2/bin/antigen.zsh > antigen.zsh
     source antigen.zsh
 
 There. You now have all the antigen goodies. Let's try install some plugins. How
@@ -264,6 +272,8 @@ In addition to the above discussed arguments, `antigen bundle` also takes a
 concerned with this argument, its only used internally and will probably go away
 in the future.  It indicates whether the bundle is a theme or a simple plugin.
 
+For details on what constitutes a valid bundle and how Antigen handles different types of bundles, see the [Notes on writing plugins](#notes-on-writing-plugins) section.
+
 ### antigen bundles
 
 If you have a fair number of bundles, using the `antigen bundle` command can
@@ -388,15 +398,25 @@ arguments.
 
 #### prezto
 
-This is (almost, but not quite) the same as doing,
+Use
 
-    antigen bundle sorin-ionescu/prezto
+    antigen use prezto 
 
-That is, initializes the canonical repo of the prezto framework. Please note
-that prezto support is very new and experimental in antigen. If you find any
-bugs, please report over on github issues.
+in  your `.zshrc`, before any `antigen bundle` declarations. It takes no further arguments.
 
-Takes no further arguments.
+That is, it initializes the canonical repo of the prezto framework,  Your .zshrc file could look like this:
+
+    antigen use prezto
+    antigen bundle sorin-ionescu/prezto modules/helper  # required for Git module
+    antigen bundle sorin-ionescu/prezto modules/editor
+    antigen bundle sorin-ionescu/prezto modules/git
+    antigen bundle sorin-ionescu/prezto modules/prompt
+    antigen apply
+
+Please note that Prezto support is new and experimental. If you find any bugs, please
+report over on github issues.
+Also note that due to how Prezto is implemented Antigen has to alter `ZDOTDIR`
+environment variable, which is restored immediately after `antigen apply` command.
 
 ### antigen theme
 
@@ -495,6 +515,28 @@ help in the future.
 I could use some help here as I'm not that good at writing documentation that
 looks good as output on the command line.
 
+## Installation
+
+Install Antigen from our main repository for the latests and greatests version available:
+
+    curl https://cdn.rawgit.com/zsh-users/antigen/v1.1.2/bin/antigen.zsh > antigen.zsh
+
+Or using your system package manager:
+
+### Apt
+
+    apt-get install zsh-antigen
+
+### Brew
+
+    brew install antigen
+
+### AUR
+
+    yaourt -S antigen-git
+
+Remember that your package manager may install an older Antigen version.
+
 ## Configuration
 
 The following environment variables can be set to customize the behavior of
@@ -519,11 +561,11 @@ system. The latest version on that website, as of today is v0.5, which does not
 have the `--shell` argument which is required to run our tests. So, to get the
 correct version of cram, run
 
-    pip install -r requirements.txt
+    pip install cram==0.0.6
 
 With that, once you have cram installed, you can run the tests as
 
-    make
+    make tests PYENV= SHELL=zsh
 
 If you are making a feature addition, I'd really appreciate if you can add a
 test for your feature. Even if you can add a test for an existing feature, that
@@ -546,9 +588,7 @@ Firstly, antigen looks for a `*.plugin.zsh` file in the plugin directory. If
 present, it will source *only* this script. Nothing else is sourced. This is for
 oh-my-zsh style plugins.
 
-Secondly, it looks for a `init.zsh` file in the plugin directory. If present, it
-will source *only* this script. Nothing else is sourced. This is for prezto
-style modules.
+Secondly, it looks for a `init.zsh` file in the plugin directory. If present, Prezto will attempt to load the plugin with `pmodload`, removing "`modules/`" from the beginning of the plugin path if present. If `pmodload` is not available, Antigen will source *only* `init.zsh` and nothing else. This is for Prezto-style modules.
 
 Otherwise, it looks for `*.zsh` files and if there are any, *all* of them are
 sourced. The order in which they are sourced is not currently defined. Please
